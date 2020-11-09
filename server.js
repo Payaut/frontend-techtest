@@ -1,6 +1,8 @@
 'use strict';
 
 const app = require('express')();
+const bodyParser = require('body-parser')
+app.use(bodyParser.json())
 const transactionsContainer = require('./transactions.json');
 const accountContainer = require('./accounts.json');
 
@@ -28,7 +30,7 @@ app.get('/transaction/:id', (req, res) => {
   const id = parseInt(req.params.id, 10);
 
   if (!Number.isNaN(id)) {
-    const transaction = transactionsContainer.Container.find((item) => item.id === id);
+    const transaction = transactionsContainer.transactions.find((item) => item.id === id);
 
     if (transaction !== null) {
       return res.status(200).json({
@@ -55,15 +57,14 @@ app.get('/transaction/:id', (req, res) => {
 app.post('/transaction/create/', (req, res) => {
   const transaction = {
     id: transactionsContainer.transactions.length,
-    accountId: req.params.accountId,
-    from: req.params.from,
-    to: req.params.to,
-    amount: req.params.amount,
-    description: req.params.description,
+    accountId: req.body.accountId,
+    from_account: req.body.from_account,
+    to_account: req.body.to_account,
+    amount: req.body.amount,
+    description: req.body.description,
   };
 
   transactionsContainer.transactions.push(transaction);
-
   return res.status(201).json({
     message: 'Resource created',
   });
@@ -97,7 +98,7 @@ app.get('/accounts/:id', (req, res) => {
   const id = parseInt(req.params.id, 10);
 
   if (!Number.isNaN(id)) {
-    const account = accountContainer.Container.find((item) => item.id === id);
+    const account = accountContainer.accounts.find((item) => item.id === id);
 
     if (account !== null) {
       return res.status(200).json({
@@ -116,22 +117,61 @@ app.get('/accounts/:id', (req, res) => {
 });
 
 /**
+ * Get /accounts/:id/balance
+ *
+ * id: Number
+ *
+ * Return the accuont balance for the given id.
+ *
+ * If found return status code 200 and the resource.
+ * If not found return status code 404.
+ * If id is not valid number return status code 400.
+ */
+app.get('/accounts/:id/balance', (req, res) => {
+  const id = parseInt(req.params.id, 10);
+
+  if (!Number.isNaN(id)) {
+    const account = accountContainer.accounts.find((item) => item.id === id);
+
+    if (account == null){
+      return res.status(404).json({
+        message: 'Not found.',
+      });
+    }
+
+    var debitFiltered = transactionsContainer.transactions.filter(transaction => transaction.from_account === id)
+    var debitSum = debitFiltered.reduce((acc,transaction)=> (acc.amount || 0) + transaction.amount,0)
+
+    var creditFiltered = transactionsContainer.transactions.filter(transaction => transaction.to_account === id)
+    var creditSum = creditFiltered.reduce((acc,transaction)=> (acc.amount || 0) + transaction.amount,0)
+
+    return res.status(200).json({
+      balance : (creditSum-debitSum)
+    });
+  } else {
+    return res.status(400).json({
+      message: 'Bad request.',
+    });
+  }
+});
+
+
+/**
  * POST /account/create/
  *
- * title: string
- * description: string
+ * name: string
  *
  * Creates a new account
  * Return status code 201.
  */
 app.post('/account/create/', (req, res) => {
+
   const account = {
     id: accountContainer.accounts.length,
-    name: req.params.name,
-    accountIBAN: req.params.accountIBAN
+    name: req.body.name,
   };
 
-  transactionsContainer.accounts.push(account);
+  accountContainer.accounts.push(account);
 
   return res.status(201).json({
     message: 'Resource created',
@@ -158,7 +198,7 @@ app.delete('/account/delete/:id', (req, res) => {
       const accountIndex = accountContainer.accounts;
       accountContainer.accounts.splice(accountIndex, 1);
       return res.status(200).json({
-        message: 'Updated successfully',
+        message: 'deleted successfully',
       });
     } else {
       return es.status(404).json({
