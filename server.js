@@ -28,11 +28,11 @@ app.get('/transaction/:id', (req, res) => {
   const id = parseInt(req.params.id, 10);
 
   if (!Number.isNaN(id)) {
-    const task = transactionsContainer.Container.find((item) => item.id === id);
+    const transaction = transactionsContainer.Container.find((item) => item.id === id);
 
-    if (task !== null) {
+    if (transaction !== null) {
       return res.status(200).json({
-        task,
+        transaction,
       });
     } else {
       return res.status(404).json({
@@ -49,11 +49,11 @@ app.get('/transaction/:id', (req, res) => {
 /**
  * POST /transactions/create/
  *
- * Add a new transactions to the array transactionsContainer.tasks with the given title and description.
+ * Add a new transactions to the array transactionsContainer.transactions with the given title and description.
  * Return status code 201.
  */
 app.post('/transaction/create/', (req, res) => {
-  const task = {
+  const transaction = {
     id: transactionsContainer.transactions.length,
     accountId: req.params.accountId,
     from: req.params.from,
@@ -62,7 +62,7 @@ app.post('/transaction/create/', (req, res) => {
     description: req.params.description,
   };
 
-  transactionsContainer.tasks.push(task);
+  transactionsContainer.transactions.push(transaction);
 
   return res.status(201).json({
     message: 'Resource created',
@@ -97,11 +97,11 @@ app.get('/accounts/:id', (req, res) => {
   const id = parseInt(req.params.id, 10);
 
   if (!Number.isNaN(id)) {
-    const task = transactionsContainer.Container.find((item) => item.id === id);
+    const account = accountContainer.Container.find((item) => item.id === id);
 
-    if (task !== null) {
+    if (account !== null) {
       return res.status(200).json({
-        task,
+        account,
       });
     } else {
       return res.status(404).json({
@@ -125,13 +125,13 @@ app.get('/accounts/:id', (req, res) => {
  * Return status code 201.
  */
 app.post('/account/create/', (req, res) => {
-  const task = {
-    id: transactionsContainer.tasks.length,
+  const account = {
+    id: accountContainer.accounts.length,
     name: req.params.name,
     accountIBAN: req.params.accountIBAN
   };
 
-  transactionsContainer.tasks.push(task);
+  transactionsContainer.accounts.push(account);
 
   return res.status(201).json({
     message: 'Resource created',
@@ -144,19 +144,19 @@ app.post('/account/create/', (req, res) => {
  * id: Number
  *
  * Delete the account linked to the given id.
- * If the task is found and deleted as well, return a status code 204.
- * If the task is not found, return a status code 404.
+ * If the account is found and deleted as well, return a status code 204.
+ * If the account is not found, return a status code 404.
  * If the provided id is not a valid number return a status code 400.
  */
 app.delete('/account/delete/:id', (req, res) => {
   const id = parseInt(req.params.id, 10);
 
   if (!Number.isNaN(id)) {
-    const task = accountContainer.tasks.find(item => item.id === id);
+    const account = accountContainer.accounts.find(item => item.id === id);
 
-    if (task !== null) {
-      const taskIndex = transactionsContainer.tasks;
-      transactionsContainer.tasks.splice(taskIndex, 1);
+    if (account !== null) {
+      const accountIndex = accountContainer.accounts;
+      accountContainer.accounts.splice(accountIndex, 1);
       return res.status(200).json({
         message: 'Updated successfully',
       });
